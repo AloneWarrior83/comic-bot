@@ -14,7 +14,7 @@ user_states = {}
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_states[update.effective_user.id] = {}
     await update.message.reply_text(
-        "سلام! 👋\nلینک سایت کامیک رو بفرست\n\nمثال:\nhttps://example.com/chapter-{}"
+        "سلام! 👋\nلینک پایه کامیک رو بفرست\n\nمثال:\nhttps://hentai20.io/secret-class-chapter-"
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -28,7 +28,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # مرحله ۱ - گرفتن لینک
     if "url" not in state:
-        if "{}" not in text:
+        if not text.startswith("http"):
             await update.message.reply_text(
                 "❌ لینک باید شامل {} باشه\n\nمثال:\nhttps://example.com/chapter-{}"
             )
@@ -120,7 +120,7 @@ async def download_chapters(update: Update, base_url: str, start: int, end: int)
         browser = await p.chromium.launch(headless=True)
 
         for chapter_num in range(start, end + 1):
-            url = base_url.format(chapter_num)
+            url = base_url + str(chapter_num) + "/"
             cbz_path = f"/tmp/comics/Chapter_{chapter_num}.cbz"
             temp_path = cbz_path + ".tmp"
 
