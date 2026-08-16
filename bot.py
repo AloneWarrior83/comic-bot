@@ -117,7 +117,10 @@ async def download_chapters(update: Update, base_url: str, start: int, end: int)
     os.makedirs("/tmp/comics", exist_ok=True)
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+    browser = await p.chromium.launch(
+        headless=True,
+        args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+    )
 
         for chapter_num in range(start, end + 1):
             url = base_url + str(chapter_num) + "/"
