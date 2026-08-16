@@ -8,13 +8,12 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
-# وضعیت هر کاربر
 user_states = {}
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_states[update.effective_user.id] = {}
     await update.message.reply_text(
-        "سلام! 👋\nلینک پایه کامیک رو بفرست\n\nمثال:\nhttps://hentai20.io/secret-class-chapter-"
+        "سلام! 👋\nلینک پایه کامیک رو بفرست\n\nمثال:\nhttps://example.com/chapter-"
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -26,18 +25,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     state = user_states[user_id]
 
-    # مرحله ۱ - گرفتن لینک
     if "url" not in state:
         if not text.startswith("http"):
-            await update.message.reply_text(
-                "❌ لینک باید شامل {} باشه\n\nمثال:\nhttps://example.com/chapter-{}"
-            )
+            await update.message.reply_text("❌ لینک باید با http شروع بشه")
             return
         state["url"] = text
         await update.message.reply_text("✅ لینک ثبت شد!\n\nحالا چپتر شروع رو بفرست:")
         return
 
-    # مرحله ۲ - گرفتن چپتر شروع
     if "start" not in state:
         if not text.isdigit():
             await update.message.reply_text("❌ فقط عدد بفرست:")
@@ -46,7 +41,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("✅ ثبت شد!\n\nحالا چپتر پایان رو بفرست:")
         return
 
-    # مرحله ۳ - گرفتن چپتر پایان و شروع دانلود
     if "end" not in state:
         if not text.isdigit():
             await update.message.reply_text("❌ فقط عدد بفرست:")
@@ -54,18 +48,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         state["end"] = int(text)
 
         url = state["url"]
-        start = state["start"]
-        end = state["end"]
+        start_ch = state["start"]
+        end_ch = state["end"]
 
-        # ریست وضعیت
         user_states[user_id] = {}
 
         await update.message.reply_text(
-            f"🚀 شروع کردم!\nلینک: {url}\nچپتر {start} تا {end}\n\nصبر کن..."
+            f"🚀 شروع کردم!\nچپتر {start_ch} تا {end_ch}\n\nصبر کن..."
         )
 
-        # شروع دانلود
-        await download_chapters(update, url, start, end)
+        await download_chapters(update, url, start_ch, end_ch)
 
 async def advanced_scroll_and_wait(page, page_number):
     viewport_height = await page.evaluate("window.innerHeight")
@@ -117,10 +109,10 @@ async def download_chapters(update: Update, base_url: str, start: int, end: int)
     os.makedirs("/tmp/comics", exist_ok=True)
 
     async with async_playwright() as p:
-    browser = await p.chromium.launch(
-        headless=True,
-        args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
-    )
+        browser = await p.chromium.launch(
+            headless=True,
+            args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+        )
 
         for chapter_num in range(start, end + 1):
             url = base_url + str(chapter_num) + "/"
@@ -165,7 +157,6 @@ async def download_chapters(update: Update, base_url: str, start: int, end: int)
                             cbz.writestr(name, data)
                     os.rename(temp_path, cbz_path)
 
-                    # ارسال فایل به تلگرام
                     with open(cbz_path, 'rb') as f:
                         await update.message.reply_document(
                             document=f,
